@@ -1,0 +1,17 @@
+<Project>
+  <!-- C# with nullable warnings as errors, analyzers on, one target: net10.0, the supported LTS
+       (.NET 8's support ended on 10 Nov 2026). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- net10.0's own C#, so every SDK that builds this compiles the same language. global.json
+         pins the 10.0.1xx SDK. -->
+    <LangVersion>14</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>10.0-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+</Project>

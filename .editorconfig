@@ -1,0 +1,27 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml,json,props,csproj}]
+indent_size = 2
+
+# The models are generated from the contract (tools/generate.ps1): their names are the contract's,
+# so analyzers do not restyle them. The public surface over them is hand-written and fully analysed.
+[src/MfxHub.Sdk/Generated/**.cs]
+generated_code = true
+
+# CA1708 (names differing only by case) is a compilation-level rule that neither the marker above
+# nor a namespace-scoped suppression reaches; the contract has such pairs (an inline enum `accounts`
+# beside the schema `Accounts`). It is off for this project. The hand-written surface's names come
+# from the idiom map and are checked against Python's surface.json, which is the stronger rule.
+[*.cs]
+dotnet_diagnostic.CA1708.severity = none
+
+# Test names read as the spec, as a sentence with underscores (the MFX house rule for every repo).
+[{tests,conformance}/**.cs]
+dotnet_diagnostic.CA1707.severity = none

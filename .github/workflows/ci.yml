@@ -1,0 +1,88 @@
+# Every push and pull request: the build with warnings as errors and the unit tests on Linux, Windows
+# and macOS, the shared SDK test suite, the generated models and the SDK reference checked against
+# what their generators write, and nothing internal in the repository or in the package NuGet would
+# get.
+#
+# Actions are pinned to a full commit SHA, with the release it is in the trailing comment, so a
+# moved tag cannot change what runs here. Dependabot proposes the updates.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          global-json-file: global.json
+      - name: Build, warnings as errors
+        run: dotnet build --configuration Release
+      - name: Unit tests, with the surface check
+        run: dotnet test tests/MfxHub.Sdk.Tests --no-build --configuration Release --logger "console;verbosity=minimal"
+
+  conformance:
+    name: shared SDK test suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          global-json-file: global.json
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+      - name: The fake hub's Python environment, from hash-pinned requirements
+        run: |
+          uv venv --python 3.12 .hub
+          uv pip install --python .hub --require-hashes -r conformance/hub-requirements.txt
+      - name: Every case of the suite
+        env:
+          MFX_SUITE_PYTHON: ${{ github.workspace }}/.hub/bin/python
+        run: dotnet test conformance --configuration Release --logger "console;verbosity=minimal"
+
+  package:
+    name: models and reference match their sources, and nothing internal is published
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          global-json-file: global.json
+      - name: The models match spec/openapi.yaml
+        shell: pwsh
+        run: |
+          ./tools/generate.ps1
+          git diff --exit-code -- src/MfxHub.Sdk/Generated
+      - name: docs/sdkref.json matches the source, and passes the shared suite's checker
+        run: |
+          dotnet run --project tools/SdkRef --configuration Release -- "$RUNNER_TEMP/sdkref.json"
+          python3 conformance/suite/sdkref/check_sdkref.py --spec spec/openapi.yaml docs/sdkref.json
+          cmp "$RUNNER_TEMP/sdkref.json" docs/sdkref.json
+      - name: The repository
+        run: python3 tools/check_public.py --tree .
+      - name: What NuGet would get
+        run: |
+          dotnet pack src/MfxHub.Sdk --configuration Release --output dist
+          python3 tools/check_public.py --package dist

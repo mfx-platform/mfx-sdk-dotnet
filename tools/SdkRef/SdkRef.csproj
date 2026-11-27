@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- docs/sdkref.json (format mfx-sdkref/1), the SDK reference the docs site renders, written from
+       MfxHub.Sdk's public API: reflection over the built assembly and its XML documentation.
+
+       Program.cs says how to run it. CI regenerates it and fails when the committed file differs. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>MfxHub.SdkRef</RootNamespace>
+    <AssemblyName>SdkRef</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MfxHub.Sdk\MfxHub.Sdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MfxHub.Sdk.Tests" />
+  </ItemGroup>
+
+</Project>

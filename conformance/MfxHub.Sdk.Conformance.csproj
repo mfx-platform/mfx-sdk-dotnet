@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The shared SDK test suite's runner: the vocabulary's operations in
+       C#, nothing more. The rules are the suite's, vendored in suite/ at suite-version.txt. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="suite/**" CopyToOutputDirectory="PreserveNewest" LinkBase="suite" />
+    <None Include="not-yet.json" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Remove="suite/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\MfxHub.Sdk\MfxHub.Sdk.csproj" />
+  </ItemGroup>
+
+</Project>

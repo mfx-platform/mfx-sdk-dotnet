@@ -1,0 +1,90 @@
+# Publish a release of MfxHub.Sdk to NuGet when a version tag (v1.2.3) is pushed.
+#
+# No long-lived API key exists. NuGet's trusted publishing exchanges a short-lived token that GitHub
+# issues to this workflow, in the `nuget` environment, for an API key that lasts an hour and pushes
+# for this repository's trusted-publishing policy only. The environment only accepts version tags and
+# waits for a maintainer's approval, so nothing reaches NuGet without a person saying so.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          global-json-file: global.json
+      - name: The tag names the version being built
+        run: python3 tools/release_version.py "${GITHUB_REF_NAME}"
+      - name: Build, warnings as errors, and the unit tests
+        run: |
+          dotnet build --configuration Release
+          dotnet test tests/MfxHub.Sdk.Tests --no-build --configuration Release --logger "console;verbosity=minimal"
+      - name: The package and its symbols, with Source Link to this commit
+        run: dotnet pack src/MfxHub.Sdk --no-build --configuration Release --output dist
+      - name: Nothing internal in either, and the readme, licence and repository NuGet shows
+        run: python3 tools/check_public.py --package dist
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  nuget:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: nuget
+      url: https://www.nuget.org/packages/MfxHub.Sdk
+    permissions:
+      # The token NuGet exchanges for this one push. It is the whole credential.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: dist
+          path: dist/
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: "10.0.x"
+      - name: A one-hour NuGet API key, for this workflow's trusted-publishing policy
+        id: login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          # The nuget.org account (profile name, not an email address) that owns the policy.
+          user: ${{ secrets.NUGET_USER }}
+      - name: Push the package; its symbols package goes with it
+        run: >
+          dotnet nuget push "dist/*.nupkg"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+
+  github-release:
+    needs: nuget
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: dist
+          path: dist/
+      - name: The release, with this version's changelog and its packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="## ${version}" '$0 == v {on=1; next} /^## / && on {exit} on' CHANGELOG.md > notes.md
+          gh release create "${GITHUB_REF_NAME}" dist/* --title "${GITHUB_REF_NAME}" --notes-file notes.md --verify-tag

@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>MfxHub</RootNamespace>
+    <AssemblyName>MfxHub.Sdk</AssemblyName>
+    <!-- A Core build is a preview, never published as a general SDK. -->
+    <PackageId>MfxHub.Sdk</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>KUDMANI PTY LTD</Authors>
+    <Description>Typed .NET client for the MFX Hub API: hosted trading terminals, market data, execution and a live event stream. Signed requests, typed errors, exact decimals, cursor paging and a resuming stream.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsPackable>true</IsPackable>
+    <!-- What nuget.org shows: the README (packed below), the licence by its SPDX expression, the
+         documentation and the public repository each release is published to. -->
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://docs.mfxhub.com/sdk</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mfx-platform/mfx-sdk-dotnet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>mfx;mfx-hub;trading;market-data;trading-api</PackageTags>
+    <Copyright>Copyright KUDMANI PTY LTD</Copyright>
+    <PackageReleaseNotes>https://github.com/mfx-platform/mfx-sdk-dotnet/blob/main/CHANGELOG.md</PackageReleaseNotes>
+    <!-- Source Link: the symbols package points a debugger at the public repository's source. -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Managed Ed25519, no native library. -->
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+    <!-- The one warning per client for MFX-Service-Agreement: due goes to the caller's ILogger
+         (MfxClientOptions.Logger); the abstractions alone, no logging implementation. -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MfxHub.Sdk.Tests" />
+  </ItemGroup>
+
+</Project>

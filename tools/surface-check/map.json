@@ -1,0 +1,48 @@
+{
+  "about": "The .NET idiom map for the surface check: how each entry of Python's surface.json (spec/surface.json) is found in this SDK's public API. A name not listed here follows the rule: snake_case becomes PascalCase, an async method gains Async, an argument in seconds (timeout_s) is a TimeSpan without the suffix (timeout), a resource is the type MfxHub.<Resource> reached as MfxClient.<Resource>, and an event is the type MfxHub.<Event>. Keep it to the exceptions. pending holds what Enriched has not landed yet, by resource, method, errors.<Name> or events.<Name>, each with the pull request's Task that brings it.",
+  "resources": {
+    "client": "MfxHub.MfxClient",
+    "stream": "MfxHub.MfxStream",
+    "terminals": "MfxHub.Terminals",
+    "usage": "MfxHub.UsageReader",
+    "md": "MfxHub.MarketData"
+  },
+  "protocols": {
+    "client.__aenter__": "System.IDisposable",
+    "client.__aexit__": "System.IDisposable",
+    "stream.__aenter__": "System.IAsyncDisposable",
+    "stream.__aexit__": "System.IAsyncDisposable",
+    "stream.__aiter__": "System.Collections.Generic.IAsyncEnumerable`1"
+  },
+  "methods": {
+    "client.__init__": ".ctor",
+    "client.aclose": "Dispose",
+    "client.stream": "StreamAsync",
+    "stream.aclose": "CloseAsync",
+    "risk.policies": "PoliciesAsync",
+    "risk.policy_versions": "PolicyVersionsAsync",
+    "risk.plans": "PlansAsync",
+    "risk.challenges": "ChallengesAsync"
+  },
+  "arguments": {
+    "client.__init__": {
+      "base_url": "baseUrl",
+      "key_id": "keyId",
+      "private_key": "key",
+      "timeout_s": "MfxClientOptions.Timeout",
+      "read_retries": "MfxClientOptions.ReadRetries",
+      "transport": "MfxClientOptions.Handler",
+      "sleep": "MfxClientOptions.Pause",
+      "jitter": "MfxClientOptions.Random",
+      "wall": "MfxClientOptions.Clock",
+      "on_call": "MfxClientOptions.OnCall"
+    },
+    "client.stream": {
+      "connect": "StreamOptions.Connect",
+      "url": "StreamOptions.Url",
+      "max_reconnects": "StreamOptions.MaxReconnects"
+    }
+  },
+  "pending": {},
+  "events": {}
+}
