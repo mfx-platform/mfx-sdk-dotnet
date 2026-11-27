@@ -32,10 +32,10 @@
 
   <ItemGroup>
     <!-- Managed Ed25519, no native library. -->
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
     <!-- The one warning per client for MFX-Service-Agreement: due goes to the caller's ILogger
          (MfxClientOptions.Logger); the abstractions alone, no logging implementation. -->
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.15" />
   </ItemGroup>
 
   <ItemGroup>
